@@ -6,7 +6,7 @@
 set -euo pipefail
 
 PORT=4322
-# Must match astro.config.mjs's `base` - not read from there automatically.
+# CV routes live under src/pages/resume/ - must match that folder.
 BASE_URL="http://localhost:$PORT/resume/"
 export CHROME_BIN="${CHROME_BIN:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 
@@ -32,7 +32,7 @@ if [ "$ready" != true ]; then
   exit 1
 fi
 
-node "$(dirname "$0")/print-pdf.mjs" "$BASE_URL" "$(pwd)/public/nicolas-nisoria.pdf"
-node "$(dirname "$0")/print-pdf.mjs" "${BASE_URL}?lang=pl" "$(pwd)/public/nicolas-nisoria-pl.pdf"
-node "$(dirname "$0")/print-pdf.mjs" "${BASE_URL}ats" "$(pwd)/public/nicolas-nisoria-ats.pdf"
-node "$(dirname "$0")/print-pdf.mjs" "${BASE_URL}ats?lang=pl" "$(pwd)/public/nicolas-nisoria-ats-pl.pdf"
+node "$(dirname "$0")/print-pdf.mjs" "$BASE_URL" "$(pwd)/public/resume/nicolas-nisoria.pdf"
+node "$(dirname "$0")/print-pdf.mjs" "${BASE_URL}?lang=pl" "$(pwd)/public/resume/nicolas-nisoria-pl.pdf"
+node "$(dirname "$0")/print-pdf.mjs" "${BASE_URL}ats" "$(pwd)/public/resume/nicolas-nisoria-ats.pdf"
+node "$(dirname "$0")/print-pdf.mjs" "${BASE_URL}ats?lang=pl" "$(pwd)/public/resume/nicolas-nisoria-ats-pl.pdf"

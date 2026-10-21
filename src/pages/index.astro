@@ -1,17 +1,20 @@
 ---
-import ResumeBody from "../components/ResumeBody.astro";
-import { withBase } from "../lib/base";
+import Header from "../components/Header.astro";
+import { resumeData } from "../data/resume.en";
 import Layout from "../layouts/Layout.astro";
 
-const pdfHrefEn = new URL(withBase("nicolas-nisoria.pdf"), import.meta.env.SITE)
-  .href;
-const pdfHrefPl = new URL(
-  withBase("nicolas-nisoria-pl.pdf"),
-  import.meta.env.SITE,
-).href;
+const { name, subtitle, headerLinks } = resumeData;
+const links = [
+  { label: "CV", href: "/resume/", icon: "pdf" as const },
+  ...headerLinks.filter((link) => link.icon !== "email"),
+];
 ---
 
-<Layout>
-  <ResumeBody pdfHref={pdfHrefEn} lang="en" />
-  <ResumeBody pdfHref={pdfHrefPl} lang="pl" />
+<Layout
+  description="Nicolas Nisoria, Senior Software Engineer."
+  langToggle={false}
+>
+  <Header name={name} subtitle={subtitle} links={links} />
+  {/* ponytail: empty until chat widget (resume-agent S04/S09/S12) lands */}
+  <section id="chat"></section>
 </Layout>

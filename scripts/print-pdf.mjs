@@ -4,8 +4,8 @@
 import { spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
 
-const PREVIEW_URL = process.argv[2] ?? "http://localhost:4322/";
-const OUT = process.argv[3] ?? "public/nicolas-nisoria.pdf";
+const PREVIEW_URL = process.argv[2] ?? "http://localhost:4322/resume/";
+const OUT = process.argv[3] ?? "public/resume/nicolas-nisoria.pdf";
 const DEBUG_PORT = 9333;
 const CHROME_BIN =
   process.env.CHROME_BIN ??

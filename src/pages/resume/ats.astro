@@ -3,16 +3,15 @@
 // application forms (e.g. Workday). Not linked from the site nav, reachable
 // by direct URL only. Same content/look as the public page; only the
 // Experience job-header order differs (see Experience.astro's `atsSafe`).
-import ResumeBody from "../components/ResumeBody.astro";
-import { withBase } from "../lib/base";
-import Layout from "../layouts/Layout.astro";
+import ResumeBody from "../../components/ResumeBody.astro";
+import Layout from "../../layouts/Layout.astro";
 
 const pdfHrefEn = new URL(
-  withBase("nicolas-nisoria-ats.pdf"),
+  "/resume/nicolas-nisoria-ats.pdf",
   import.meta.env.SITE,
 ).href;
 const pdfHrefPl = new URL(
-  withBase("nicolas-nisoria-ats-pl.pdf"),
+  "/resume/nicolas-nisoria-ats-pl.pdf",
   import.meta.env.SITE,
 ).href;
 ---

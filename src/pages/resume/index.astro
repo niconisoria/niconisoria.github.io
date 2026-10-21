@@ -1,0 +1,16 @@
+---
+import ResumeBody from "../../components/ResumeBody.astro";
+import Layout from "../../layouts/Layout.astro";
+
+const pdfHrefEn = new URL("/resume/nicolas-nisoria.pdf", import.meta.env.SITE)
+  .href;
+const pdfHrefPl = new URL(
+  "/resume/nicolas-nisoria-pl.pdf",
+  import.meta.env.SITE,
+).href;
+---
+
+<Layout>
+  <ResumeBody pdfHref={pdfHrefEn} lang="en" />
+  <ResumeBody pdfHref={pdfHrefPl} lang="pl" />
+</Layout>

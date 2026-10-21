@@ -1,6 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { describe, expect, it } from "vitest";
-import Ats from "../../src/pages/ats.astro";
+import Ats from "../../../src/pages/resume/ats.astro";
 
 async function render() {
   const container = await AstroContainer.create();
@@ -29,7 +29,7 @@ describe("ats page", () => {
     )?.[0];
     expect(anchor).toBeDefined();
     const href = anchor?.match(/href="([^"]+)"/)?.[1];
-    expect(href).toMatch(/^https:\/\/.*\/nicolas-nisoria-ats\.pdf$/);
+    expect(href).toMatch(/^https:\/\/[^/]+\/resume\/nicolas-nisoria-ats\.pdf$/);
   });
 
   it("renders both an EN and a PL language block", async () => {
@@ -45,6 +45,8 @@ describe("ats page", () => {
     )?.[0];
     expect(anchor).toBeDefined();
     const href = anchor?.match(/href="([^"]+)"/)?.[1];
-    expect(href).toMatch(/^https:\/\/.*\/nicolas-nisoria-ats-pl\.pdf$/);
+    expect(href).toMatch(
+      /^https:\/\/[^/]+\/resume\/nicolas-nisoria-ats-pl\.pdf$/,
+    );
   });
 });

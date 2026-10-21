@@ -23,6 +23,9 @@
 | Lint      | `npm run lint` (ESLint + eslint-plugin-astro)                    |
 | Format    | `npm run format` (Prettier + prettier-plugin-astro/-tailwindcss) |
 
+- framework: vitest
+- test_cmd: npm test
+
 ---
 
 ## Project Map

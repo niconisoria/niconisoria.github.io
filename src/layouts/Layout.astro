@@ -1,17 +1,18 @@
 ---
 import LangToggle from "../components/LangToggle.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
-import { withBase } from "../lib/base";
 import "../styles/global.css";
 
 interface Props {
   title?: string;
   description?: string;
+  langToggle?: boolean;
 }
 
 const {
   title = "Nicolas Nisoria — Senior Software Engineer",
   description = "Resume of Nicolas Nisoria, Senior Software Engineer.",
+  langToggle = true,
 } = Astro.props;
 ---
 
@@ -20,8 +21,8 @@ const {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=1024" />
-    <link rel="icon" type="image/svg+xml" href={withBase("favicon.svg")} />
-    <link rel="icon" href={withBase("favicon.ico")} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -67,7 +68,7 @@ const {
       <slot />
     </div>
     <ThemeToggle />
-    <LangToggle />
+    {langToggle && <LangToggle />}
   </body>
 </html>
 

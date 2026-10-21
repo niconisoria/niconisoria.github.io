@@ -1,6 +1,5 @@
 ---
 import ActionLink from "./ActionLink.astro";
-import { withBase } from "../lib/base";
 
 interface Link {
   label: string;
@@ -17,7 +16,7 @@ interface Props {
 
 const { name, subtitle, links = [] } = Astro.props;
 
-const homeHref = new URL(withBase(), import.meta.env.SITE).href;
+const homeHref = new URL("/resume/", import.meta.env.SITE).href;
 
 const strokeIcon = (inner: string) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true" focusable="false">${inner}</svg>`;

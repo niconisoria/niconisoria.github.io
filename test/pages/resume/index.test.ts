@@ -1,6 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { describe, expect, it } from "vitest";
-import Index from "../../src/pages/index.astro";
+import Index from "../../../src/pages/resume/index.astro";
 
 async function render() {
   const container = await AstroContainer.create();
@@ -15,7 +15,7 @@ describe("index page", () => {
     )?.[0];
     expect(anchor).toBeDefined();
     const href = anchor?.match(/href="([^"]+)"/)?.[1];
-    expect(href).toMatch(/^https:\/\/.*\/nicolas-nisoria\.pdf$/);
+    expect(href).toMatch(/^https:\/\/[^/]+\/resume\/nicolas-nisoria\.pdf$/);
   });
 
   it("opens the PDF in a new tab", async () => {
@@ -33,6 +33,11 @@ describe("index page", () => {
     expect(html).toContain('data-lang="pl"');
   });
 
+  it("keeps the EN/PL language toggle", async () => {
+    const html = await render();
+    expect(html).toContain('id="lang-toggle"');
+  });
+
   it("marks each language block with its own lang attribute for screen readers", async () => {
     const html = await render();
     expect(html).toMatch(/<div[^>]*data-lang="en"[^>]*lang="en"/);
@@ -46,6 +51,6 @@ describe("index page", () => {
     )?.[0];
     expect(anchor).toBeDefined();
     const href = anchor?.match(/href="([^"]+)"/)?.[1];
-    expect(href).toMatch(/^https:\/\/.*\/nicolas-nisoria-pl\.pdf$/);
+    expect(href).toMatch(/^https:\/\/[^/]+\/resume\/nicolas-nisoria-pl\.pdf$/);
   });
 });
