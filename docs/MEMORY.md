@@ -20,3 +20,9 @@
 - Astro scoped `<style>` never reaches markup injected via `set:html` (no `data-astro-cid` attr) — wrap those selector parts in `:global(...)`. Was why the theme toggle showed both icons.
 - landing name reveal: words hidden by head inline script only when motion allowed, plus 3s timeout that unhides — a failed/blocked module script can never leave the name invisible.
 - favicon uses 5 grain lines, not the hero's 7: 7 blur into a block at 16px.
+- Deep Chat built-in `connect` over a custom handler: 2.5.1 source parses non-2xx JSON bodies and SSE `{error}` frames and shows their `error` string with `displayServiceErrorMessages` — no custom stream code needed. Re-check if upgrading deep-chat.
+- Deep Chat theming: pass `var(--color-…)` values in its style props — custom properties inherit into the shadow DOM, so dark/light switching needs no re-render or JS.
+- Deep Chat loads on `requestIdleCallback`, not eagerly: ~115KB gz, 4× the hero script, and most visitors never chat. Set its properties only after `import("deep-chat")` resolves, so the element's setters (not plain own props) receive them.
+- chat dev URL: `.env` writes are hook-blocked, so `CHAT_URL` falls back to the localhost mock when `import.meta.env.MODE === "development"` (tests run in `test` mode, prod builds in `production`).
+- chat full screen: native `<dialog>` + `showModal()`, not a restyled overlay — Esc, focus trap/return, inert page and modal semantics come free. Deep Chat stays inside the dialog permanently: moving the element re-initialises it and drops the conversation, so the landing gets a separate "Ask about Nicolas…" button instead. Deep Chat has no launcher/modal mode of its own (2.5.1).
+- Deep Chat inner `#container` sizes to its content, not its host — set `#container { height: 100% }` via `auxiliaryStyle` or the input floats under the messages in a tall chat.

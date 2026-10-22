@@ -51,9 +51,12 @@ describe("landing page", () => {
     expect(html).toContain('href="https://calendar.google.com/');
   });
 
-  it("keeps an empty placeholder section for the future chat widget", async () => {
+  it("puts the chat widget in the #chat section, below the links", async () => {
     const html = await render();
-    expect(html).toMatch(/<section[^>]*id="chat"[^>]*>\s*<\/section>/);
+    expect(html).toMatch(/<section[^>]*id="chat"[^>]*>.*?<deep-chat/s);
+    expect(html.indexOf('id="chat"')).toBeGreaterThan(
+      html.indexOf('aria-label="Links"'),
+    );
   });
 
   it("has the theme toggle but no monogram and no language toggle", async () => {
@@ -61,6 +64,6 @@ describe("landing page", () => {
     expect(html).toContain('id="theme-toggle"');
     expect(html).not.toMatch(/>\s*NN\s*</);
     expect(html).not.toContain('id="lang-toggle"');
-    expect(html).not.toContain("Vention");
+    expect(html).not.toContain("MSc Systems Engineering");
   });
 });

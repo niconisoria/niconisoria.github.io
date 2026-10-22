@@ -14,12 +14,14 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pdf": "bash scripts/generate-pdf.sh"
+    "pdf": "bash scripts/generate-pdf.sh",
+    "mock:chat": "node scripts/mock-chat.mjs"
   },
   "dependencies": {
     "@paper-design/shaders": "^0.0.82",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.2",
+    "deep-chat": "2.5.1",
     "motion": "^14.5.0",
     "tailwindcss": "^4.3.3"
   },
