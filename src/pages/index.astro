@@ -14,7 +14,7 @@ const links = headerLinks.flatMap((link) =>
   link.icon === "email" ? [] : [{ href: link.href, label: LABELS[link.icon] }],
 );
 const pill =
-  "inline-flex min-h-12 items-center rounded-full border border-navy-200 bg-paper px-5 text-[0.9375rem] font-semibold text-navy-900 transition-colors hover:border-wood-500 hover:bg-wood-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700";
+  "inline-flex min-h-12 items-center justify-center rounded-full border border-navy-200 bg-paper px-5 text-[0.9375rem] font-semibold text-navy-900 transition-colors hover:border-wood-500 hover:bg-wood-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700";
 ---
 
 <LandingLayout>
@@ -40,10 +40,13 @@ const pill =
       <span aria-hidden="true"> ⚡ </span>
     </p>
 
-    <nav aria-label="Links" class="mt-11 flex flex-wrap justify-center gap-3">
+    <nav
+      aria-label="Links"
+      class="mt-11 grid w-full max-w-sm grid-cols-2 gap-3 sm:flex sm:w-auto sm:max-w-none sm:flex-wrap sm:justify-center"
+    >
       <a
         href="/resume/"
-        class="group inline-flex min-h-12 items-center gap-2.5 rounded-full bg-navy-900 px-6 text-[0.9375rem] font-semibold text-paper transition-shadow hover:ring-2 hover:ring-wood-500 hover:ring-offset-2 hover:ring-offset-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+        class="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-navy-900 px-6 text-[0.9375rem] font-semibold text-paper transition-shadow hover:ring-2 hover:ring-wood-500 hover:ring-offset-2 hover:ring-offset-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
       >
         View CV
         <svg
