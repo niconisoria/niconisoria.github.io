@@ -1,0 +1,13 @@
+<script is:inline>
+  let stored = null;
+  try {
+    stored = localStorage.getItem("theme");
+  } catch {
+    // storage blocked (e.g. private mode) — fall through to OS preference
+  }
+  document.documentElement.dataset.theme =
+    stored ??
+    (window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light");
+</script>

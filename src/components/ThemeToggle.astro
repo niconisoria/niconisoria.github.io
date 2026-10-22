@@ -15,13 +15,13 @@ const moonIcon = `<svg viewBox="0 0 24 24" fill="currentColor" width="18" height
 </button>
 
 <style>
-  #theme-toggle [data-icon="moon"] {
+  #theme-toggle :global([data-icon="moon"]) {
     display: none;
   }
-  :global(:root[data-theme="dark"]) #theme-toggle [data-icon="sun"] {
+  :global(:root[data-theme="dark"]) #theme-toggle :global([data-icon="sun"]) {
     display: none;
   }
-  :global(:root[data-theme="dark"]) #theme-toggle [data-icon="moon"] {
+  :global(:root[data-theme="dark"]) #theme-toggle :global([data-icon="moon"]) {
     display: block;
   }
   @media print {

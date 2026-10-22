@@ -1,0 +1,88 @@
+---
+// Full-width blue-ash grain hero around its slot (tagline + name). Server-renders a
+// plain hero (state "fallback"); the client script swaps in the WebGL shader
+// ("live"), or a still frame for reduced-motion visitors ("still").
+---
+
+<header
+  data-grain
+  data-grain-state="fallback"
+  class="relative isolate flex min-h-[48svh] w-full flex-col items-center justify-center px-4 pt-16 pb-12 sm:min-h-[56svh] sm:pt-20 text-center"
+>
+  <div
+    data-grain-canvas
+    class="absolute inset-0 -z-10"
+    aria-hidden="true"
+  ></div>
+  <slot />
+</header>
+
+<script>
+  import { ShaderMount } from "@paper-design/shaders";
+  import { animate, stagger } from "motion";
+  import fragmentShader from "./grain.frag.glsl?raw";
+
+  const IDLE_POINTER = [100, 100];
+  const root = document.documentElement;
+  const hero = document.querySelector<HTMLElement>("[data-grain]");
+  const host = hero?.querySelector<HTMLElement>("[data-grain-canvas]");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function revealWords(startDelay: number) {
+    if (reduced) return;
+    animate(
+      "[data-word]",
+      { opacity: [0, 1], y: [28, 0] },
+      { duration: 0.9, delay: stagger(0.14, { startDelay }) },
+    ).finished.then(() => {
+      root.dataset.reveal = "done";
+    });
+  }
+
+  let mount: ShaderMount | undefined;
+  if (hero && host) {
+    try {
+      mount = new ShaderMount(
+        host,
+        fragmentShader,
+        {
+          u_pointer: IDLE_POINTER,
+          u_reveal: reduced ? 1 : 0,
+        },
+        undefined,
+        reduced ? 0 : 1,
+        // reduced motion: one fixed, fully grown frame
+        reduced ? 20000 : 0,
+      );
+      hero.dataset.grainState = reduced ? "still" : "live";
+    } catch {
+      // no WebGL2 or shader failed: keep the plain hero
+    }
+  }
+
+  if (mount && !reduced) {
+    const shader = mount;
+    animate(0, 1, {
+      duration: 1.6,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => shader.setUniforms({ u_reveal: v }),
+    });
+    revealWords(0.5);
+
+    window.addEventListener("pointermove", (e) => {
+      const rect = host!.getBoundingClientRect();
+      shader.setUniforms({
+        u_pointer: [
+          (e.clientX - rect.left - rect.width / 2) / rect.height,
+          -(e.clientY - rect.top - rect.height / 2) / rect.height,
+        ],
+      });
+    });
+    // pointerleave never fires on document itself; the root element gets it when the cursor exits the window
+    document.documentElement.addEventListener("pointerleave", () =>
+      shader.setUniforms({ u_pointer: IDLE_POINTER }),
+    );
+  } else {
+    revealWords(0);
+  }
+</script>

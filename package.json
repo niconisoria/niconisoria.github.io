@@ -17,8 +17,10 @@
     "pdf": "bash scripts/generate-pdf.sh"
   },
   "dependencies": {
+    "@paper-design/shaders": "^0.0.82",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.2",
+    "motion": "^14.5.0",
     "tailwindcss": "^4.3.3"
   },
   "allowScripts": {

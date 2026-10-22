@@ -38,6 +38,20 @@ describe("index page", () => {
     expect(html).toContain('id="lang-toggle"');
   });
 
+  it("has a back-to-landing button, hidden in print", async () => {
+    const html = await render();
+    const back = html.match(/<a[^>]*aria-label="Back to home"[^>]*>/)?.[0];
+    expect(back).toContain('href="/"');
+    expect(back).toContain("print:hidden");
+  });
+
+  it("links the name in the header to the landing page", async () => {
+    const html = await render();
+    expect(html).toMatch(
+      /<h1[^>]*>\s*<a href="https:\/\/[^/"]+\/">Nicolas Nisoria<\/a>/,
+    );
+  });
+
   it("marks each language block with its own lang attribute for screen readers", async () => {
     const html = await render();
     expect(html).toMatch(/<div[^>]*data-lang="en"[^>]*lang="en"/);

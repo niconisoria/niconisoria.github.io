@@ -1,18 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-    <rect width="128" height="128" rx="24" fill="#FCFAF6" />
-    <text
-        x="64"
-        y="90"
-        text-anchor="middle"
-        font-family="Georgia, 'Times New Roman', serif"
-        font-weight="700"
-        font-size="68"
-        fill="#1B63A6"
-    >NN</text>
-    <style>
-        @media (prefers-color-scheme: dark) {
-            rect { fill: #0D1116; }
-            text { fill: #6FB6E8; }
-        }
-    </style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- landing grain lines: alternating blue / roasted-maple wood on white; 5 lines (7 blur together at 16px) -->
+  <defs>
+    <clipPath id="tile">
+      <rect width="64" height="64" rx="14" />
+    </clipPath>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#FFFFFF" />
+  <g clip-path="url(#tile)" fill="none" stroke-width="3.4" stroke-linecap="round">
+    <path stroke="#1B63A6" d="M-2 12 C12 8 20 17 34 13 S56 9 66 14" />
+    <path stroke="#C9852E" d="M-2 23 C9 19 22 27 33 23 S52 17 66 24" />
+    <path stroke="#3A8AD0" d="M-2 33 C14 29 19 39 31 34 S55 27 66 33" />
+    <path stroke="#C9852E" d="M-2 44 C8 39 23 49 35 44 S53 40 66 43" />
+    <path stroke="#1B63A6" d="M-2 54 C13 51 21 58 32 54 S54 49 66 55" />
+  </g>
 </svg>
