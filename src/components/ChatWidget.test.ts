@@ -51,6 +51,14 @@ describe("ChatWidget", () => {
     );
   });
 
+  it("offers a labelled New chat button in the chat header", async () => {
+    const html = await render();
+    const dialog = html.match(/<dialog[^>]*>.*?<\/dialog>/s)?.[0];
+    expect(dialog).toMatch(
+      /<button[^>]*type="button"[^>]*data-chat-new[^>]*>\s*New chat\s*<\/button>/,
+    );
+  });
+
   it("shows the one-line privacy notice in the chat", async () => {
     const html = await render();
     const dialog = html.match(/<dialog[^>]*>.*?<\/dialog>/s)?.[0];
