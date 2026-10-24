@@ -86,8 +86,8 @@ const focusRing =
       The chat couldn't load. Please refresh the page and try again.
     </p>
     <p class="mt-2 text-center text-2xs text-ink-500">
-      Messages are logged anonymously to improve answers. Don't share personal
-      data.
+      Messages are processed by AI. Emails you share are used only so Nicolas
+      can reply.
     </p>
   </dialog>
 </div>
@@ -136,6 +136,7 @@ const focusRing =
     chatRequest,
     chatResponse,
     newChat,
+    sendFeedback,
     takeExtrasHtml,
   } from "../lib/chat";
 
@@ -192,6 +193,36 @@ const focusRing =
     });
   });
 
+  const errorTimers = new WeakMap<Element, number>();
+
+  // The pressed state only changes once the server saved the vote. One request per
+  // answer at a time, so replies can't land out of order.
+  async function vote(event: Event) {
+    const button = (event.target as Element).closest<HTMLElement>(
+      "[data-rating]",
+    );
+    const box = button?.closest<HTMLElement>("[data-message-id]");
+    if (!button || !box?.dataset.messageId) return;
+    if (button.ariaPressed === "true" || box.ariaBusy === "true") return;
+    box.ariaBusy = "true";
+    const rating = Number(button.dataset.rating) as 1 | -1;
+    const result = await sendFeedback(box.dataset.messageId, rating);
+    box.ariaBusy = null;
+    if ("error" in result) {
+      const status = box.querySelector("[role=status]");
+      if (!status) return;
+      status.textContent = result.error;
+      clearTimeout(errorTimers.get(status));
+      errorTimers.set(
+        status,
+        window.setTimeout(() => (status.textContent = ""), 4000),
+      );
+      return;
+    }
+    for (const thumb of box.querySelectorAll("[data-rating]"))
+      thumb.setAttribute("aria-pressed", String(thumb === button));
+  }
+
   function setup() {
     if (!chat) return;
     chat.connect = { url: CHAT_URL, method: "POST", stream: true };
@@ -204,6 +235,8 @@ const focusRing =
       const html = takeExtrasHtml();
       if (html) chat.addMessage({ role: "ai", html });
     });
+    // 👍/👎 live in Deep Chat's shadow DOM: one delegated listener for all answers
+    chat.shadowRoot.addEventListener("click", vote);
     chat.errorMessages = { displayServiceErrorMessages: true };
     // CSS inside the shadow DOM: themed thin scrollbar (default track is light gray
     // on dark), and #container filling the host so the input sits at the bottom of
@@ -222,6 +255,23 @@ const focusRing =
       .chat-sources { margin-top: 8px; font-size: 13px; color: var(--color-ink-500); }
       .chat-sources p { margin: 0 0 2px; font-weight: 600; }
       .chat-sources ul { margin: 0; padding-left: 18px; }
+      .chat-chip {
+        border: 1px solid var(--color-navy-200); border-radius: 9999px;
+        padding: 6px 14px; font-size: 14px; color: var(--color-ink-900);
+        background: var(--color-navy-100);
+      }
+      .chat-feedback { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+      .chat-feedback button {
+        cursor: pointer; border: 1px solid var(--color-navy-200); border-radius: 9999px;
+        padding: 3px 10px; font-size: 14px; background: var(--color-paper);
+      }
+      .chat-feedback button:hover { border-color: var(--color-wood-500); }
+      .chat-feedback button:focus-visible { outline: 2px solid var(--color-navy-700); outline-offset: 2px; }
+      .chat-feedback button[aria-pressed="true"] {
+        border-color: var(--color-navy-700); background: var(--color-navy-100);
+        box-shadow: 0 0 0 1px var(--color-navy-700);
+      }
+      .chat-feedback [role="status"] { font-size: 13px; color: var(--color-ink-500); }
     `;
     chat.chatStyle = {
       width: "100%",

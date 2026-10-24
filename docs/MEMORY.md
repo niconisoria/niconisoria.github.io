@@ -30,3 +30,6 @@
 - chat `conversation_id` in memory, not sessionStorage: Deep Chat's on-screen history is lost on reload, so a stored id would make the backend remember context the visitor can't see.
 - citation markers: chunk tail (` [12` or trailing space) held for the next chunk, since a marker and its leading space can arrive in different SSE chunks — stripping per chunk alone left "Vention ." in the live run.
 - no sources/cards on a failed reply: the answer is incomplete, and listing sources under an error bubble reads as if the failure was sourced.
+- chat final event detected by `"message_id" in event`, not a truthy `conversation_id`: the daily-budget fallback sends `conversation_id: null` on a new chat, and the old check treated that final event as a text chunk, dropping its booking/CV buttons.
+- feedback thumbs: pressed state set only after `/feedback` returns 200 (no optimistic UI), and one in-flight vote per answer — the backend keeps the last write, so overlapping 👍/👎 requests could leave the UI showing a vote the server didn't keep.
+- thumbs selected state: 1px border + `navy-100` fill alone was too faint in dark theme (`navy-100` is near `paper` there); an extra 1px `box-shadow` ring makes it readable in both.

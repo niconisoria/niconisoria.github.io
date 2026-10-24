@@ -63,7 +63,7 @@ describe("ChatWidget", () => {
     const html = await render();
     const dialog = html.match(/<dialog[^>]*>.*?<\/dialog>/s)?.[0];
     expect(dialog).toContain(
-      "Messages are logged anonymously to improve answers. Don't share personal data.",
+      "Messages are processed by AI. Emails you share are used only so Nicolas can reply.",
     );
   });
 });

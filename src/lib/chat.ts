@@ -1,8 +1,8 @@
 // Chat with the resume agent (resume-agent repo). The backend takes
 // {message, conversation_id?} and streams `data: {"text": ...}` events, then always
-// a final event {conversation_id, message_id, citations, cards} with no text. Its
-// `{error}` bodies (422/429/503) and `{error}` stream frames surface via
-// `errorMessages.displayServiceErrorMessages`.
+// a final event {conversation_id, message_id, citations, cards} with no text (on a
+// daily-budget fallback message_id is null, conversation_id too on a new chat). Its `{error}` bodies (422/429/503) and
+// `{error}` stream frames surface via `errorMessages.displayServiceErrorMessages`.
 // The live backend rejects localhost (CORS), so `astro dev` talks to
 // `npm run mock:chat`; PUBLIC_CHAT_URL overrides either default.
 export const CHAT_URL: string =
@@ -10,6 +10,8 @@ export const CHAT_URL: string =
   (import.meta.env.MODE === "development"
     ? "http://localhost:8787/chat"
     : "https://niconisoria-resume-agent.fly.dev/chat");
+
+export const FEEDBACK_URL = CHAT_URL.replace(/\/chat$/, "/feedback");
 
 export const MAX_CHARS = 1000;
 
@@ -26,12 +28,14 @@ interface Citation {
 interface Card {
   type: string;
   label: string;
-  url: string;
+  url?: string;
+  issue?: number; // handoff ticket
 }
 interface StreamEvent {
   text?: string;
   error?: string;
-  conversation_id?: string;
+  conversation_id?: string | null;
+  message_id?: string | null;
   citations?: Citation[];
   cards?: Card[];
 }
@@ -89,15 +93,20 @@ export function chatResponse(event: StreamEvent) {
     replyError = event.error;
     return event;
   }
-  if (event.conversation_id) {
+  if ("message_id" in event) {
     if (!replying) return { text: "" };
     replying = false;
-    conversationId = event.conversation_id;
+    // a budget fallback on a new chat has no id: keep whatever we have
+    conversationId = event.conversation_id ?? conversationId;
     // Deep Chat clears the error bubble after each event: hand the error back to keep
     // it (no sources or cards for a failed reply); otherwise append only the held
     // tail, so no new or empty bubble appears.
     if (replyError) return { error: replyError };
-    extras = extrasHtml(event.citations ?? [], event.cards ?? []);
+    extras = extrasHtml(
+      event.citations ?? [],
+      event.cards ?? [],
+      event.message_id ?? null,
+    );
     const rest = tail;
     tail = "";
     return { text: rest };
@@ -122,18 +131,56 @@ const escape = (s: string) =>
       `&${{ "&": "amp", "<": "lt", ">": "gt", '"': "quot", "'": "#39" }[c]};`,
   );
 
-function extrasHtml(citations: Citation[], cards: Card[]) {
-  const links = cards
-    .filter((card) => /^https?:\/\//i.test(card.url))
-    .map(
-      (card) =>
-        `<a class="chat-card" href="${escape(card.url)}" target="_blank" rel="noopener">${escape(card.label)}</a>`,
-    );
+function cardHtml(card: Card) {
+  if (card.type === "handoff") {
+    const ticket = Number.isInteger(card.issue)
+      ? ` · ticket #${card.issue}`
+      : "";
+    return `<span class="chat-chip">✓ ${escape(card.label)}${ticket}</span>`;
+  }
+  return card.url && /^https?:\/\//i.test(card.url)
+    ? `<a class="chat-card" href="${escape(card.url)}" target="_blank" rel="noopener">${escape(card.label)}</a>`
+    : "";
+}
+
+function extrasHtml(
+  citations: Citation[],
+  cards: Card[],
+  messageId: string | null,
+) {
+  const items = cards.map(cardHtml).join("");
   const sources = citations.map((c) => `<li>${escape(c.title)}</li>`);
   return [
-    links.length ? `<div class="chat-cards">${links.join("")}</div>` : "",
+    items ? `<div class="chat-cards">${items}</div>` : "",
     sources.length
       ? `<div class="chat-sources"><p>Sources</p><ul>${sources.join("")}</ul></div>`
       : "",
+    messageId
+      ? `<div class="chat-feedback" data-message-id="${escape(messageId)}">` +
+        `<button type="button" data-rating="1" aria-pressed="false" aria-label="Helpful">👍</button>` +
+        `<button type="button" data-rating="-1" aria-pressed="false" aria-label="Not helpful">👎</button>` +
+        `<span role="status"></span></div>`
+      : "",
   ].join("");
+}
+
+const FEEDBACK_ERROR = "Couldn't save your vote. Please try again.";
+
+// 👍/👎 on an answer; voting again replaces the earlier vote server-side.
+export async function sendFeedback(
+  messageId: string,
+  rating: 1 | -1,
+): Promise<{ ok: true } | { error: string }> {
+  try {
+    const res = await fetch(FEEDBACK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message_id: messageId, rating }),
+    });
+    if (res.ok) return { ok: true };
+    const { error } = await res.json();
+    return { error: typeof error === "string" ? error : FEEDBACK_ERROR };
+  } catch {
+    return { error: FEEDBACK_ERROR }; // offline, or a non-JSON error page
+  }
 }

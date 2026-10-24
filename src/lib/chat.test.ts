@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CHAT_URL,
+  FEEDBACK_URL,
   MAX_CHARS,
   STARTER_PROMPTS,
   chatRequest,
   chatResponse,
   newChat,
+  sendFeedback,
   takeExtrasHtml,
 } from "./chat";
 
@@ -149,8 +151,8 @@ describe("takeExtrasHtml", () => {
     chatResponse(final(extra));
   };
 
-  it("is empty when the reply has no citations or cards", () => {
-    finish({});
+  it("is empty when the reply has no citations, cards or message_id", () => {
+    finish({ message_id: null });
     expect(takeExtrasHtml()).toBe("");
   });
 
@@ -207,6 +209,7 @@ describe("takeExtrasHtml", () => {
   it("drops cards whose url is not http(s)", () => {
     finish({
       cards: [{ type: "booking", label: "Bad", url: "javascript:alert(1)" }],
+      message_id: null,
     });
     expect(takeExtrasHtml()).toBe("");
   });
@@ -240,5 +243,147 @@ describe("chat config", () => {
 
   it("offers three starter prompts", () => {
     expect(STARTER_PROMPTS).toHaveLength(3);
+  });
+});
+
+describe("final event with null ids", () => {
+  const budget = {
+    conversation_id: null,
+    message_id: null,
+    citations: [],
+    cards: [
+      { type: "booking", label: "Book a call", url: "https://cal.example" },
+      { type: "cv", label: "Download CV (EN)", url: "https://e.com/cv" },
+    ],
+  };
+
+  it("keeps the stored conversation when the final event has no id", () => {
+    chatRequest(deepChatBody("Hi"));
+    chatResponse(final());
+    chatRequest(deepChatBody("More"));
+    chatResponse({ text: "Resting." });
+    chatResponse(budget);
+    expect(takeExtrasHtml()).toContain("Book a call");
+    expect(
+      (chatRequest(deepChatBody("Again")) as { body: object }).body,
+    ).toEqual({ message: "Again", conversation_id: "c-1" });
+  });
+
+  it("renders a budget fallback's cards without thumbs", () => {
+    chatRequest(deepChatBody("Hi"));
+    const out = chatResponse({ text: "Resting." });
+    const last = chatResponse(budget);
+    expect([out, last]).toEqual([{ text: "Resting." }, { text: "" }]);
+    const html = takeExtrasHtml();
+    expect(html).toContain(">Book a call</a>");
+    expect(html).toContain(">Download CV (EN)</a>");
+    expect(html).not.toContain("data-rating");
+  });
+});
+
+describe("feedback thumbs", () => {
+  const finish = (extra: object) => {
+    chatRequest(deepChatBody("Q"));
+    chatResponse({ text: "A" });
+    chatResponse(final(extra));
+    return takeExtrasHtml();
+  };
+
+  it("shows 👍/👎 for a saved answer, tied to its message_id", () => {
+    const html = finish({ message_id: "m-9" });
+    expect(html).toMatch(/<div class="chat-feedback" data-message-id="m-9"/);
+    expect(html).toMatch(
+      /<button[^>]*data-rating="1"[^>]*aria-pressed="false"/,
+    );
+    expect(html).toMatch(
+      /<button[^>]*data-rating="-1"[^>]*aria-pressed="false"/,
+    );
+    expect(html).toMatch(/role="status"/);
+  });
+
+  it("shows no thumbs when the answer wasn't saved", () => {
+    expect(finish({ message_id: "m-1" })).toContain("data-rating");
+    expect(finish({ message_id: null })).not.toContain("data-rating");
+  });
+
+  it("escapes the message id", () => {
+    const html = finish({ message_id: '"><img>' });
+    expect(html).toContain('data-message-id="&quot;&gt;&lt;img&gt;"');
+    expect(html).not.toContain("<img>");
+  });
+});
+
+describe("handoff card", () => {
+  const finish = (card: object) => {
+    chatRequest(deepChatBody("Q"));
+    chatResponse({ text: "A" });
+    chatResponse(final({ cards: [card] }));
+    return takeExtrasHtml();
+  };
+
+  it("renders a non-clickable chip with the ticket number", () => {
+    const html = finish({
+      type: "handoff",
+      label: "Nicolas will follow up by email",
+      issue: 42,
+    });
+    expect(html).toContain(
+      '<span class="chat-chip">✓ Nicolas will follow up by email · ticket #42</span>',
+    );
+    expect(html).not.toMatch(/<a[\s>]/);
+  });
+
+  it("omits the ticket part when there is no issue number", () => {
+    const html = finish({ type: "handoff", label: "Follow-up <soon>" });
+    expect(html).toContain(
+      '<span class="chat-chip">✓ Follow-up &lt;soon&gt;</span>',
+    );
+  });
+});
+
+describe("sendFeedback", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const stubFetch = (impl: () => Promise<Response>) => {
+    const fetch = vi.fn(impl);
+    vi.stubGlobal("fetch", fetch);
+    return fetch;
+  };
+
+  it("posts message_id and rating to the feedback endpoint", async () => {
+    const fetch = stubFetch(async () =>
+      Response.json({ status: "saved" }, { status: 200 }),
+    );
+    expect(await sendFeedback("m-1", -1)).toEqual({ ok: true });
+    expect(fetch).toHaveBeenCalledWith(FEEDBACK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message_id: "m-1", rating: -1 }),
+    });
+  });
+
+  it("returns the server's error text", async () => {
+    stubFetch(async () =>
+      Response.json({ error: "Answer not found." }, { status: 404 }),
+    );
+    expect(await sendFeedback("m-1", 1)).toEqual({
+      error: "Answer not found.",
+    });
+  });
+
+  it("falls back to a readable error on network failure or odd bodies", async () => {
+    const generic = { error: "Couldn't save your vote. Please try again." };
+    stubFetch(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    expect(await sendFeedback("m-1", 1)).toEqual(generic);
+    stubFetch(async () => new Response("<html>502</html>", { status: 502 }));
+    expect(await sendFeedback("m-1", 1)).toEqual(generic);
+  });
+
+  it("targets /feedback next to /chat", () => {
+    expect(FEEDBACK_URL).toBe(
+      "https://niconisoria-resume-agent.fly.dev/feedback",
+    );
   });
 });
