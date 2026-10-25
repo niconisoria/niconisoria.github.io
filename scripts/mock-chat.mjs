@@ -6,6 +6,7 @@
 // "outage" → 503, "talk"/"call" → booking card, "cv" → CV card, "email" → handoff
 // chip, "budget" → daily-budget fallback, "badvote" → answer whose votes 404.
 // POST /feedback {message_id, rating}: 200 for ids issued here, 404 / 422 otherwise.
+// GET /insights: fixed 30-day sample (cost null, gap days) for the /insights page.
 import { randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 
@@ -49,11 +50,41 @@ const send = (res, status, body, headers = {}) => {
   res.end(JSON.stringify(body));
 };
 
+const today = new Date();
+const daysAgo = (n) =>
+  new Date(today.getTime() - n * 86_400_000).toISOString().slice(0, 10);
+const INSIGHTS = {
+  window_days: 30,
+  generated_at: today.toISOString(),
+  days: [
+    { date: daysAgo(12), conversations: 2, messages: 5 },
+    { date: daysAgo(4), conversations: 4, messages: 11 },
+    { date: daysAgo(0), conversations: 3, messages: 7 },
+  ],
+  resolution: { conversations: 9, escalated: 1, resolved_share: 0.889 },
+  feedback: { up: 2, down: 1, up_share: 0.667 },
+  topics: [
+    ["skills", 8, 1],
+    ["experience", 6, 0],
+    ["ai_work", 4, 2],
+    ["projects", 3, 0],
+    ["logistics", 1, 0],
+    ["availability", 1, 0],
+    ["other", 0, 0],
+    ["out_of_scope", 0, 0],
+  ].map(([topic, messages, no_hits]) => ({ topic, messages, no_hits })),
+  p95_latency_ms: 3949,
+  cost_per_conversation_usd: null,
+  blocked: { rate_limited: 2, budget_exceeded: 0 },
+};
+
 createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", req.headers.origin ?? "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.writeHead(200).end();
+  if (req.method === "GET" && req.url === "/insights")
+    return send(res, 200, INSIGHTS);
   if (req.method === "POST" && req.url === "/feedback")
     return feedback(req, res);
   if (req.method !== "POST" || req.url !== "/chat")

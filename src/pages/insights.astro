@@ -1,0 +1,282 @@
+---
+import LandingLayout from "../layouts/LandingLayout.astro";
+
+// Cells filled client-side from GET /insights, keyed by data-field.
+const sections = [
+  {
+    title: "Resolution",
+    rows: [
+      ["Conversations", "conversations"],
+      ["Escalated to Nicolas", "escalated"],
+      ["Escalation share", "escalated_share"],
+      ["Resolved without handoff", "resolved_share"],
+    ],
+  },
+  {
+    title: "Feedback",
+    rows: [
+      ["👍 Helpful", "up"],
+      ["👎 Not helpful", "down"],
+      ["👍 share of rated answers", "up_share"],
+    ],
+  },
+  {
+    title: "Performance",
+    rows: [
+      ["Response time (p95)", "p95_latency"],
+      ["Cost per conversation", "cost"],
+    ],
+  },
+  {
+    title: "Blocked requests",
+    rows: [
+      ["Rate limited", "rate_limited"],
+      ["Daily budget reached", "budget_exceeded"],
+    ],
+  },
+];
+const h2 =
+  "m-0 mb-3 text-sm font-semibold tracking-[0.15em] text-navy-900 uppercase";
+const cell = "border-b border-navy-200 py-2";
+---
+
+<LandingLayout
+  title="Assistant insights — Nicolas Nisoria"
+  description="Usage numbers for Nicolas Nisoria's resume assistant over the last 30 days."
+>
+  <main class="mx-auto max-w-3xl px-4 pt-10 pb-16">
+    <a
+      href="/"
+      class="text-sm font-semibold text-navy-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+    >
+      ← Home
+    </a>
+    <h1 class="mt-4 mb-1 font-['Fraunces'] text-4xl font-bold text-navy-900">
+      Assistant insights
+    </h1>
+    <p class="m-0 text-ink-500">
+      How the resume assistant was used in the last{" "}
+      <span data-field="window_days">30</span> days. Counts only, no messages
+      are shown.
+    </p>
+    <p id="status" role="status" class="mt-6 text-ink-900">
+      Loading…
+    </p>
+
+    <div id="content" hidden>
+      <p data-field="updated" class="m-0 mb-8 text-sm text-ink-500"></p>
+
+      <section class="mb-10">
+        <h2 class={h2}>Conversations per day</h2>
+        <p id="empty" hidden class="m-0 text-ink-500">
+          No conversations in the last 30 days.
+        </p>
+        <div data-chart class="relative h-64">
+          <canvas
+            id="days-chart"
+            role="img"
+            aria-label="Conversations and messages per day, last 30 days (UTC)"
+          ></canvas>
+        </div>
+      </section>
+
+      <section class="mb-10">
+        <h2 class={h2}>Topics</h2>
+        <div data-chart class="relative mb-4 h-72">
+          <canvas
+            id="topics-chart"
+            role="img"
+            aria-label="Questions per topic, most asked first"
+          ></canvas>
+        </div>
+        <table class="w-full border-collapse text-left text-ink-900">
+          <thead class="text-sm text-ink-500">
+            <tr>
+              <th class={cell} scope="col">
+                Topic
+              </th>
+              <th class={`${cell} text-right`} scope="col">
+                Questions
+              </th>
+              <th class={`${cell} text-right`} scope="col">
+                No knowledge found
+              </th>
+            </tr>
+          </thead>
+          <tbody id="topics-body"></tbody>
+        </table>
+      </section>
+
+      <div class="grid gap-10 sm:grid-cols-2">
+        {sections.map(({ title, rows }) => (
+          <section>
+            <h2 class={h2}>{title}</h2>
+            <table class="w-full border-collapse text-left text-ink-900">
+              <tbody>
+                {rows.map(([label, field]) => (
+                  <tr>
+                    <th class={`${cell} font-normal`} scope="row">
+                      {label}
+                    </th>
+                    <td
+                      class={`${cell} text-right font-semibold tabular-nums`}
+                      data-field={field}
+                    >
+                      —
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        ))}
+      </div>
+    </div>
+  </main>
+</LandingLayout>
+
+<script>
+  import type { Chart as ChartType } from "chart.js";
+  import {
+    TOPIC_LABELS,
+    fetchInsights,
+    fillDays,
+    formatCost,
+    formatSeconds,
+    formatShare,
+    formatUpdated,
+    type Insights,
+  } from "../lib/insights";
+
+  const $ = <T extends HTMLElement>(sel: string) =>
+    document.querySelector<T>(sel)!;
+
+  function fillTables(d: Insights) {
+    const { resolution: r, feedback: f, blocked: b } = d;
+    const fields: Record<string, string | number> = {
+      window_days: d.window_days,
+      updated: formatUpdated(d.generated_at),
+      conversations: r.conversations,
+      escalated: r.escalated,
+      escalated_share: formatShare(
+        r.conversations ? r.escalated / r.conversations : null,
+      ),
+      resolved_share: formatShare(r.resolved_share),
+      up: f.up,
+      down: f.down,
+      up_share: formatShare(f.up_share),
+      p95_latency: formatSeconds(d.p95_latency_ms),
+      cost: formatCost(d.cost_per_conversation_usd),
+      rate_limited: b.rate_limited,
+      budget_exceeded: b.budget_exceeded,
+    };
+    for (const el of document.querySelectorAll<HTMLElement>("[data-field]"))
+      el.textContent = String(fields[el.dataset.field!]);
+
+    $("#topics-body").replaceChildren(
+      ...d.topics.map((t) => {
+        const tr = document.createElement("tr");
+        for (const [i, text] of [
+          TOPIC_LABELS[t.topic] ?? t.topic,
+          t.messages,
+          t.no_hits,
+        ].entries()) {
+          const td = document.createElement("td");
+          td.className = `border-b border-navy-200 py-2${i ? " text-right tabular-nums" : ""}`;
+          td.textContent = String(text);
+          tr.append(td);
+        }
+        return tr;
+      }),
+    );
+  }
+
+  let charts: ChartType[] = [];
+
+  // Chart.js paints a canvas, so theme tokens are read now and the charts
+  // redrawn when the theme flips.
+  async function drawCharts(d: Insights) {
+    const { default: Chart } = await import("chart.js/auto");
+    const css = getComputedStyle(document.documentElement);
+    const token = (name: string) =>
+      css.getPropertyValue(`--color-${name}`).trim();
+    Chart.defaults.color = token("ink-500");
+    Chart.defaults.borderColor = token("navy-100");
+    Chart.defaults.maintainAspectRatio = false;
+    charts.forEach((c) => c.destroy());
+
+    const days = fillDays(d.days, d.window_days, d.generated_at);
+    const integer = { beginAtZero: true, ticks: { precision: 0 } };
+    charts = [
+      new Chart($<HTMLCanvasElement>("#days-chart"), {
+        type: "line",
+        data: {
+          labels: days.map((x) => x.date.slice(5)),
+          datasets: [
+            {
+              label: "Conversations",
+              data: days.map((x) => x.conversations),
+              borderColor: token("navy-700"),
+              backgroundColor: token("navy-700"),
+            },
+            {
+              label: "Messages",
+              data: days.map((x) => x.messages),
+              borderColor: token("wood-500"),
+              backgroundColor: token("wood-500"),
+            },
+          ],
+        },
+        options: { scales: { y: integer } },
+      }),
+      new Chart($<HTMLCanvasElement>("#topics-chart"), {
+        type: "bar",
+        data: {
+          labels: d.topics.map((t) => TOPIC_LABELS[t.topic] ?? t.topic),
+          datasets: [
+            {
+              label: "Questions",
+              data: d.topics.map((t) => t.messages),
+              backgroundColor: token("navy-700"),
+            },
+            {
+              label: "No knowledge found",
+              data: d.topics.map((t) => t.no_hits),
+              backgroundColor: token("wood-500"),
+            },
+          ],
+        },
+        options: { indexAxis: "y", scales: { x: integer } },
+      }),
+    ];
+  }
+
+  const result = await fetchInsights();
+  const status = $("#status");
+  if ("error" in result) {
+    status.textContent = result.error;
+  } else {
+    const d = result.data;
+    status.textContent = "";
+    status.hidden = true;
+    fillTables(d);
+    $("#content").hidden = false;
+    // ponytail: zero traffic → note instead of flat charts; topic table still shows zeros
+    if (d.resolution.conversations === 0 && d.days.length === 0) {
+      $("#empty").hidden = false;
+      document
+        .querySelectorAll<HTMLElement>("[data-chart]")
+        .forEach((el) => (el.hidden = true));
+    } else {
+      await drawCharts(d);
+      const redraw = () => drawCharts(d);
+      new MutationObserver(redraw).observe(document.documentElement, {
+        attributeFilter: ["data-theme"],
+      });
+      matchMedia("(prefers-color-scheme: dark)").addEventListener(
+        "change",
+        redraw,
+      );
+    }
+  }
+</script>

@@ -21,6 +21,7 @@
     "@paper-design/shaders": "^0.0.82",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.2",
+    "chart.js": "^4.6.1",
     "deep-chat": "2.5.1",
     "motion": "^14.5.0",
     "tailwindcss": "^4.3.3"
