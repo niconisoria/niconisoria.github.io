@@ -66,4 +66,15 @@ describe("ChatWidget", () => {
       "Messages are processed by AI. Emails you share are used only so Nicolas can reply.",
     );
   });
+
+  it("links the notice to the insights page in a new tab, keeping the chat", async () => {
+    const html = await render();
+    const dialog = html.match(/<dialog[^>]*>.*?<\/dialog>/s)?.[0];
+    const link = dialog?.match(/<a[^>]*href="\/insights\/"[^>]*>/)?.[0];
+    expect(link).toContain('target="_blank"');
+    expect(link).toContain("focus-visible:outline-2");
+    expect(dialog).toMatch(
+      /<a[^>]*href="\/insights\/"[^>]*>\s*See how it's used/,
+    );
+  });
 });

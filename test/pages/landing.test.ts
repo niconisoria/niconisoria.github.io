@@ -51,6 +51,18 @@ describe("landing page", () => {
     expect(html).toContain('href="https://calendar.google.com/');
   });
 
+  it("puts a decorative icon before each link label", async () => {
+    const html = await render();
+    const nav = html.match(/<nav[^>]*aria-label="Links"[^>]*>.*?<\/nav>/s)?.[0];
+    for (const label of ["View CV", "LinkedIn", "GitHub", "Book a call"])
+      expect(nav).toMatch(
+        new RegExp(
+          `<svg[^>]*aria-hidden="true"[^>]*>(?:(?!</a>).)*?</svg>\\s*${label}`,
+          "s",
+        ),
+      );
+  });
+
   it("puts the chat widget in the #chat section, below the links", async () => {
     const html = await render();
     expect(html).toMatch(/<section[^>]*id="chat"[^>]*>.*?<deep-chat/s);

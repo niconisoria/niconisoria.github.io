@@ -1,6 +1,7 @@
 ---
 import ChatWidget from "../components/ChatWidget.astro";
 import GrainHero from "../components/GrainHero.astro";
+import { ICONS } from "../components/icons";
 import { resumeData } from "../data/resume.en";
 import LandingLayout from "../layouts/LandingLayout.astro";
 
@@ -12,10 +13,12 @@ const LABELS = {
   booking: "Book a call",
 };
 const links = headerLinks.flatMap((link) =>
-  link.icon === "email" ? [] : [{ href: link.href, label: LABELS[link.icon] }],
+  link.icon === "email"
+    ? []
+    : [{ href: link.href, label: LABELS[link.icon], icon: ICONS[link.icon] }],
 );
 const pill =
-  "inline-flex min-h-12 items-center justify-center rounded-full border border-navy-200 bg-paper px-5 text-[0.9375rem] font-semibold text-navy-900 transition-colors hover:border-wood-500 hover:bg-wood-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-navy-200 bg-paper px-5 text-[0.9375rem] font-semibold text-navy-900 transition-colors hover:border-wood-500 hover:bg-wood-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700";
 ---
 
 <LandingLayout>
@@ -49,6 +52,7 @@ const pill =
         href="/resume/"
         class="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-navy-900 px-6 text-[0.9375rem] font-semibold text-paper transition-shadow hover:ring-2 hover:ring-wood-500 hover:ring-offset-2 hover:ring-offset-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
       >
+        <Fragment set:html={ICONS.pdf} />
         View CV
         <svg
           class="transition-transform motion-safe:group-hover:translate-x-1"
@@ -73,6 +77,7 @@ const pill =
           rel="noopener noreferrer"
           class={pill}
         >
+          <Fragment set:html={link.icon} />
           {link.label}
         </a>
       ))}
