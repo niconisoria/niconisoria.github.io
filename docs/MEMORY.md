@@ -34,3 +34,4 @@
 - feedback thumbs: pressed state set only after `/feedback` returns 200 (no optimistic UI), and one in-flight vote per answer — the backend keeps the last write, so overlapping 👍/👎 requests could leave the UI showing a vote the server didn't keep.
 - thumbs selected state: 1px border + `navy-100` fill alone was too faint in dark theme (`navy-100` is near `paper` there); an extra 1px `box-shadow` ring makes it readable in both.
 - chat notice links open in new tab: the conversation lives only in memory, so navigating away from the open dialog would silently drop the visitor's chat.
+- Astro drops line-break whitespace between text and a following element (e.g. `reply.` then `<a>` on next line): use explicit `{" "}`. Tests on rendered HTML catch it; source looks fine.

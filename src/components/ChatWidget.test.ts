@@ -73,6 +73,7 @@ describe("ChatWidget", () => {
     const link = dialog?.match(/<a[^>]*href="\/insights\/"[^>]*>/)?.[0];
     expect(link).toContain('target="_blank"');
     expect(link).toContain("focus-visible:outline-2");
+    expect(dialog).toMatch(/can reply\.\s+<a[^>]*href="\/insights\/"/);
     expect(dialog).toMatch(
       /<a[^>]*href="\/insights\/"[^>]*>\s*See how it's used/,
     );
