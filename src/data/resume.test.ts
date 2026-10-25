@@ -48,4 +48,12 @@ describe("getResumeData", () => {
       en.headerLinks.map((l) => l.href),
     );
   });
+
+  it("lists Resume Agent first in personal projects, in both languages", () => {
+    for (const lang of ["en", "pl"] as const) {
+      const first = getResumeData(lang).personalProjects[0];
+      expect(first.title).toBe("Resume Agent");
+      expect(first.href).toBe("https://github.com/niconisoria/resume-agent");
+    }
+  });
 });

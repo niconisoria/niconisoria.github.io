@@ -152,6 +152,24 @@ export const resumeData: ResumeData = {
   ],
   personalProjects: [
     {
+      title: "Resume Agent",
+      href: "https://github.com/niconisoria/resume-agent",
+      achievements: [
+        "Zbudowałem i wdrożyłem **asystenta czatu RAG** dla mojej strony portfolio: usługa FastAPI streamuje odpowiedzi Claude przez **SSE** z cytowaniami z bazy wiedzy **pgvector** i używa narzędzi, by umówić rozmowę, wysłać CV lub **przekazać rozmowę człowiekowi** przez kolejkę GitHub Issues",
+        "Napisałem pętlę agenta bezpośrednio na Anthropic SDK, **bez frameworka agentowego**, z każdym krokiem LLM i narzędzi jawnym i śledzonym w Arize Phoenix",
+        "Uzależniłem wdrożenia od zestawu **model-graded eval'ów** w CI (retrieval, routing, groundedness, odmowy), więc spadek jakości blokuje release na Fly.io",
+        "Ograniczyłem nadużycia i koszty **rate limitami** per IP oraz **dziennym budżetem** z fallbackiem, i opublikowałem publiczną stronę statystyk: odsetek rozwiązanych rozmów, oceny, tematy, opóźnienie p95 i koszt na rozmowę",
+      ],
+      stack: [
+        "Python",
+        "FastAPI",
+        "Anthropic API",
+        "PostgreSQL + pgvector",
+        "Arize Phoenix",
+        "Fly.io",
+      ],
+    },
+    {
       title: "Clank",
       href: "https://github.com/niconisoria/clank",
       achievements: [
